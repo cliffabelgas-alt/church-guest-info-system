@@ -1,0 +1,61 @@
+// components/EventQRCode.tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+import QRCode from 'qrcode';
+import type { CCFEvent } from '@/lib/events';
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://icorner.m77solutions.com';
+
+type Props = {
+  event: CCFEvent;
+  size?: number;
+};
+
+export default function EventQRCode({ event, size = 140 }: Props) {
+  const [dataUrl, setDataUrl] = useState<string>('');
+  const icsUrl = `${SITE_URL}/events/${event.id}/calendar.ics`;
+
+  useEffect(() => {
+    QRCode.toDataURL(icsUrl, {
+      width: size,
+      margin: 1,
+      errorCorrectionLevel: 'M',
+      color: { dark: '#1a1a1a', light: '#ffffff' },
+    })
+      .then(setDataUrl)
+      .catch((err) => console.error('QR generation failed:', err));
+  }, [icsUrl, size]);
+
+  if (!dataUrl) {
+    return (
+      <div
+        style={{ width: size, height: size }}
+        className="bg-gray-100 animate-pulse rounded"
+        aria-label="Loading QR code"
+      />
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%' }}>
+      <img
+        src={dataUrl}
+        alt={`QR code to add ${event.activity} to your calendar`}
+        width={size}
+        height={size}
+        className="rounded border border-gray-200" style={{ display: 'block', margin: '0 auto' }}
+      />
+      <p style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', textAlign: 'center', maxWidth: 240, marginTop: 8, marginBottom: 0, lineHeight: 1.4 }}>
+        📱 Scan to add to your calendar
+      </p>
+      <p style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', textAlign: 'center', maxWidth: 240, marginTop: 8, marginBottom: 0, lineHeight: 1.4 }}>
+        Please USE built-in Camera app,<br/>NOT QR Scanner apps
+      </p>
+    
+      <div className="icsUrl-display" style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', wordBreak: 'break-all', textAlign: 'center', maxWidth: 240, marginTop: 6, marginBottom: 0, lineHeight: 1.4 }}>
+        {icsUrl}
+      </div>
+      </div>
+  );
+}
